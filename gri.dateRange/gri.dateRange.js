@@ -327,12 +327,22 @@
 	
 	//判断是否是实时数据,如果是将时间默认填充进去 added by johnnyzheng 12-06
 	if(this.mOpts.singleCompare){
-		$('#' + this.compareCheckboxId).attr('checked',true);
-		$('#' + this.mOpts.compareCheckboxId).attr('checked',true);
-		$('#' + __method.startDateId).val(__method.mOpts.startDate);
-		$('#' + __method.endDateId).val(__method.mOpts.startDate);
-		$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
-		$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
+		if(this.mOpts.theme === 'ta'){
+			$('#' + __method.startDateId).val(__method.mOpts.startDate);
+			$('#' + __method.endDateId).val(__method.mOpts.startDate);
+			$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
+			$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
+		}
+		else{
+			$('#' + __method.startDateId).val(__method.mOpts.startDate);
+			$('#' + __method.endDateId).val(__method.mOpts.startDate);
+			$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
+			$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
+			$('#' + this.compareCheckboxId).attr('checked',true);
+			$('#' + this.mOpts.compareCheckboxId).attr('checked',true);
+		}
+		
+		
 	}
     // 时间对比
     $('#' + this.dateRangeCompareDiv).css('display', $('#' + this.compareCheckboxId).attr('checked') ? '' : 'none');
