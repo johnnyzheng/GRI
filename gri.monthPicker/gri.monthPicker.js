@@ -4,7 +4,9 @@
  * @author johnnyzheng(johnnyzheng@tencent.com)
  * @version 2013-03-27
  * @modification 第一次抽取到框架中的月份选择器
- *  2013-05-03 解决bug:IE9下向前向后重复出发
+ *  			2013-05-03 解决bug:IE9下向前向后重复出发
+ * 				2013-06-15 增肌默认选择上一月，已经特定月份的接口
+ * 				2013-07-10 增加配置接口，支持选择一段月份时间
  * ========================================
  */
 
@@ -13,6 +15,7 @@
  * @namespace 全局的命名空间
  */
 GRI = window.GRI || {};
+
 GRI.monthPicker = {
 	_conf : {
 		//月份选择器的开始年
@@ -51,10 +54,18 @@ GRI.monthPicker = {
 		autoCommit : false,
 		//返回的是月份，还是日期，默认是月份
 		returnDate : false,
-		//默认选中的时间月份
+		//默认选中的时间月份 , 字符串规范形如： '201302'
 		defaultMonth : '',
 		//默认选中上个月
-		lastMonth : false
+		lastMonth : false,
+		//支持区间选择
+		period :  false,
+		//开始月份，只有上述为true时才生效
+		start_month : '',
+		//结束月份，只有上述为true时才生效
+		end_month : '',
+		//默认文字
+		defaultText : ' 至 '
 	},
 
 	//最终的返回值，初始值是当前年月
@@ -83,11 +94,21 @@ GRI.monthPicker = {
 			});
 		}();
 		//默认填充最近一个月, 如果设置了默认选中上一个月，则选中上一个月， 如果默认设置了月份，则显示。后者覆盖前者
-		this._conf.lastMonth && (this.assemble.month = new Date().getMonth()); 
-		''!==this._conf.defaultMonth && (this.assemble = {'year':this._conf.defaultMonth.substr(0,4), 'month':this._conf.defaultMonth.substr(4)*1});
-		var def = this.util.format(this.assemble);
-		$('#'+id).html(def.year + '-' + def.month);
-		that._conf.autoCommit && that._conf.callback(that.convertToDate(this.util.format(this.assemble)));
+		
+
+		//判断是取一段时间的话
+		if(that._conf.period && that._conf.start_month!= '' && that._conf.end_month != ''){
+			$('#'+id).html(that._conf.start_month + that._conf.defaultText + that._conf.end_month);
+			that._conf.autoCommit && that._conf.callback({start_date:that._conf.start_month+'-01', end_date: that._conf.end_month+'-31'});
+
+		}
+		else{
+			this._conf.lastMonth && (this.assemble.month = new Date().getMonth()); 
+			''!==this._conf.defaultMonth && (this.assemble = {'year':this._conf.defaultMonth.substr(0,4), 'month':this._conf.defaultMonth.substr(4)*1});
+			var def = this.util.format(this.assemble);
+			$('#'+id).html(def.year + '-' + def.month);
+			that._conf.autoCommit && that._conf.callback(that.convertToDate(this.util.format(this.assemble)));
+		}
 		 //让用户点击页面即可关闭弹窗
 	    $(document).bind('click', function (evt) {
 	       that.cancel(evt);
@@ -231,6 +252,10 @@ GRI.monthPicker = {
 				if(this.assemble.year == this.util.getCurrentDate().year &&  months.data[p][i] > this.util.getCurrentDate().month){
 					$(td).addClass(this._conf.disabledCss);
 				}
+				//判断是否是区间选择
+				else if(this._conf.period){
+					window.addEventListener && td.addEventListener('click', this.hdlPeriod, false) || window.attachEvent && td.attachEvent('onclick', this.hdlPeriod);
+				}
 				else{
 					window.addEventListener && td.addEventListener('click', this.addCss, false) || window.attachEvent && td.attachEvent('onclick', this.addCss);
 				}
@@ -252,6 +277,47 @@ GRI.monthPicker = {
 		this.assemble.year = this.assemble.year*1 + 1;
 		this.util.$('gri_year').innerHTML = this.assemble.year + '年';
 		fn && fn(this);
+	},
+	//处理区间选择
+	hdlPeriod : function(evt){
+		//that.removeCss();
+		var evt = window.event || evt, target = evt.srcElement || evt.target;
+		var select_month = (/^gri_month(\d+)/).test(target.getAttribute('id')) && (/^gri_month(\d+)/).exec(target.getAttribute('id'))[1];
+		var start = end = {};
+		that.removeCss();
+		//切换选中
+		(GRI.monthPicker.Params.current == '' || GRI.monthPicker.Params.current == GRI.monthPicker.Constant.END_MONTH) ? (GRI.monthPicker.Params.current = GRI.monthPicker.Constant.START_MONTH) : (GRI.monthPicker.Params.current = GRI.monthPicker.Constant.END_MONTH);
+		//target.setAttribute(that.util.getCla(), that._conf.selectCss);
+		if(GRI.monthPicker.Params.current == GRI.monthPicker.Constant.START_MONTH){
+			$(target).addClass(that._conf.selectCss);
+			GRI.monthPicker.Params.start_month = select_month;
+			GRI.monthPicker.Params.start_year = that.assemble.year; 
+		}
+		else{
+			GRI.monthPicker.Params.end_month = select_month;
+			GRI.monthPicker.Params.end_year = that.assemble.year;
+			
+			sm = Math.min(GRI.monthPicker.Params.end_month, GRI.monthPicker.Params.start_month);
+			em = Math.max(GRI.monthPicker.Params.end_month, GRI.monthPicker.Params.start_month);
+			for(var i = sm; i<=em; i++){
+				$('#gri_month'+i).addClass(that._conf.selectCss);
+			}
+
+			start = that.util.format({year:GRI.monthPicker.Params.start_year, month:GRI.monthPicker.Params.start_month});
+			end =  that.util.format({year:GRI.monthPicker.Params.end_year, month:GRI.monthPicker.Params.end_month});
+		
+			//这里做下比较，然后确定大小关系。
+			if(GRI.monthPicker.Params.start_year*1 > GRI.monthPicker.Params.end_year*1 || (GRI.monthPicker.Params.start_year*1 <= GRI.monthPicker.Params.end_year*1 && GRI.monthPicker.Params.start_month*1 >GRI.monthPicker.Params.end_month*1) ){
+				var tmp = start;
+				start = end;
+				end= tmp;
+			}
+			//赋回原值
+			that._conf.input.innerHTML = [start.year, start.month].join('-') + that._conf.defaultText + [end.year, end.month].join('-');
+			//提交，调用回调函数
+			that._conf.callback({start_date:start.year+'-'+start.month+'-01', end_date:end.year+'-'+end.month+'-31'});
+		}
+		
 	},
 	//增加样式
 	addCss : function(evt) {
@@ -282,8 +348,10 @@ GRI.monthPicker = {
 	},
 	//取消
 	cancel : function(evt) {
+		
 		var evt = window.event || evt, target = evt.srcElement || evt.target;
-		!(target.id && (target.id == this._conf.id || target.id == this._conf.trigger) || target.className && (target.className == 'i_pre'|| target.className == 'i_next')) && $('#'+this._conf.container).length > 0 && $('#'+this._conf.container).hide();
+		!(target.id && (target.id == this._conf.id || target.id == this._conf.trigger) || (this._conf.period && GRI.monthPicker.Params.current == GRI.monthPicker.Constant.START_MONTH)|| target.className && (target.className == 'i_pre'|| target.className == 'i_next')) && $('#'+this._conf.container).length > 0 && $('#'+this._conf.container).hide();
+
 	},
 	//确定
 	submit : function() {
@@ -350,4 +418,19 @@ GRI.monthPicker = {
 			};
 		}
 	}
+};
+
+//常量
+GRI.monthPicker.Constant = {
+	START_MONTH : 'start_month',
+	END_MONTH : 'end_month'
+
+};
+//存储一些全局变量
+GRI.monthPicker.Params = {
+	current : '',
+	start_year : '',
+	start_month : '',
+	end_month : '',
+	end_year : ''
 };
