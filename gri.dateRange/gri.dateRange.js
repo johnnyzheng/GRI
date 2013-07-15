@@ -911,6 +911,7 @@ pickerDateRange.prototype.close = function(btnSubmit) {
 		//如果是单日快捷选择
 		if (this.mOpts.shortOpr === true){
 			$('#' + this.inputId).val($('#' + this.startDateId).val());
+			$('#' + this.inputCompareId).val($('#' + this.startCompareDateId).val());
 		}else{
 			$('#' + this.inputId).val($('#' + this.startDateId).val() + ('' == $('#' + this.endDateId).val() ? '' : this.mOpts.defaultText + $('#' + this.endDateId).val()));
 		}
@@ -929,8 +930,10 @@ pickerDateRange.prototype.close = function(btnSubmit) {
 		var input = document.getElementById(this.inputId);
 		if(input && input.tagName == 'INPUT'){
 			$('#' + this.inputId).val(_val);
+			$('#'+this.inputCompareId).is(':visible') && $('#'+this.inputCompareId).val(_compareVal);
 		}else{
 			$('#' + this.inputId).html(_val);
+			$('#'+this.inputCompareId).is(':visible') && $('#'+this.inputCompareId).html(_compareVal);
 		}
 		//	//在js侧就做好日期校准，以前面的日期选择的跨度为准，如果后面的跨度超过了当前可用时间，则以当前可用时间向前推 added by johnnyzheng 11-29
 		if(this.mOpts.theme != 'ta'){
@@ -957,10 +960,11 @@ pickerDateRange.prototype.close = function(btnSubmit) {
 		}
 		//把对比时间填入输入框 (PS:如果选择今日，昨日，则只填入一个日期)
 		//$('#' + this.inputCompareId).val($('#' + this.startCompareDateId).val() + this.mOpts.defaultText + $('#' + this.endCompareDateId).val());
+		var _compareVal = this.mOpts.shortOpr == true ? $('#' + this.startCompareDateId).val() : ($('#' + this.startCompareDateId).val() + ('' == $('#' + this.endCompareDateId).val() ? '' : this.mOpts.defaultText + $('#' + this.endCompareDateId).val()));
 		if(input && input.tagName == 'INPUT'){
-				$('#' + this.inputCompareId).val($('#' + this.startCompareDateId).val() + this.mOpts.defaultText + $('#' + this.endCompareDateId).val());
+				$('#' + this.inputCompareId).val(_compareVal);
 		}else{
-				$('#' + this.inputCompareId).html($('#' + this.startCompareDateId).val() + this.mOpts.defaultText + $('#' + this.endCompareDateId).val());
+				$('#' + this.inputCompareId).html(_compareVal);
 		}
 		// 计算相隔天数
 		var step = (bDateTime - eDateTime) / 86400000;
