@@ -172,9 +172,10 @@ GRI.monthPicker = {
 		contentDiv.id = this._conf.calendar;
 		$(contentDiv).addClass(this._conf.contentCss);
 		var ctrl = [];
-		ctrl.push('<i class="i_pre" id="gri_preYear"></i>');
-		ctrl.push('<i class="i_next" id="gri_nextYear"></i>');
+		ctrl.push('<i class="i_pre" style="z-index:1" id="gri_preYear"></i>');
+		ctrl.push('<i class="i_next" style="z-index:1" id="gri_nextYear"></i>');
 		$(contentDiv).append(ctrl.join(''));
+		//$(ctrl.join('')).appendTo($(contentDiv));
 		div.appendChild(contentDiv);
 		div.style.display = 'block';
 		this.init();
@@ -199,7 +200,8 @@ GRI.monthPicker = {
 		tbody.setAttribute('id', this._conf.dataTable);
 		table.appendChild(tbody);
 
-		this._conf.calendar ? this.util.$(this._conf.calendar).appendChild(table) : document.body.appendChild(table);
+		// this._conf.calendar ? this.util.$(this._conf.calendar).append(table) : document.body.append(table);
+		 $(0 < $('#'+this._conf.calendar).length ? '#'+this._conf.calendar : document.body).append(table);
 
 		//构造月份等面板
 		this.construct();
