@@ -8,6 +8,7 @@
  *                    2013-01-31  增加自定义灰掉周末 周几的选项，增加自动初始化自动提交的功能
  *                    2013-03-15  支持一个页面多个日期选择器，快捷日期选择
  *                    2013-03-26  增加确认、取消按钮的隐藏，而直接自动提交
+ * 					  2013-08-01  增加接口，支持自定义开始结束时间
  *=======================================================================
 */
 	
@@ -26,11 +27,13 @@
 		aRecent7Days : 'aRecent7Days', //最近7天
 		aRecent14Days : 'aRecent14Days',//最近14天
 		aRecent30Days : 'aRecent30Days', //最近30天
+		aRecent90Days : 'aRecent90Days', //最近90天
         startDate : '', // 开始日期
         endDate : '', // 结束日期
         startCompareDate : '', // 对比开始日期
         endCompareDate : '', // 对比结束日期
 		minValidDate : '315507600', //最小可用时间，控制日期选择器的可选力度
+        maxValidDate : '', // 最大可用事件，与stopToday 配置互斥
         success : function(obj) {return true;}, //回调函数，选择日期之后执行何种操作
         startDateId : 'startDate', // 开始日期输入框ID
         startCompareDateId : 'startCompareDate', // 对比开始日期输入框ID
@@ -89,7 +92,7 @@
 	this.periodObj[__method.mOpts.aRecent7Days] = 6;
 	this.periodObj[__method.mOpts.aRecent14Days] = 13;
 	this.periodObj[__method.mOpts.aRecent30Days] = 29;
-	
+	this.periodObj[__method.mOpts.aRecent90Days] = 89;
     // 记录初始默认时间
     this.startDefDate = '';
     // 随机ID后缀
@@ -328,11 +331,11 @@
 	//判断是否是实时数据,如果是将时间默认填充进去 added by johnnyzheng 12-06
 	if(this.mOpts.singleCompare){
 		if(this.mOpts.theme === 'ta'){
-			$('#' + __method.startDateId).val(__method.mOpts.startDate);
-			$('#' + __method.endDateId).val(__method.mOpts.startDate);
-			$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
-			$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
-		}
+		$('#' + __method.startDateId).val(__method.mOpts.startDate);
+		$('#' + __method.endDateId).val(__method.mOpts.startDate);
+		$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
+		$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
+	}
 		else{
 			$('#' + __method.startDateId).val(__method.mOpts.startDate);
 			$('#' + __method.endDateId).val(__method.mOpts.startDate);
@@ -809,7 +812,7 @@ pickerDateRange.prototype.selectDate = function(ymd) {
         $('#' + this.dateInput).val(ymdFormat);
         // 切换输入框焦点
 		if (true == this.mOpts.singleCompare || true == this.mOpts.isSingleDay) {
-            this.dateInput = this.startCompareDateId;
+			this.dateInput = this.startCompareDateId;
 			$('#' + this.endCompareDateId).val(ymdFormat);
 			(this.mOpts.shortOpr || this.mOpts.autoSubmit) && this.close(1);
             this.mOpts.success({'startDate': $('#' + this.mOpts.startDateId).val(),
@@ -818,7 +821,7 @@ pickerDateRange.prototype.selectDate = function(ymd) {
                 'startCompareDate':$('#' + this.mOpts.startCompareDateId).val(),
                 'endCompareDate':$('#' + this.mOpts.endCompareDateId).val()
             });
-        }
+		}
 		else{
 		     this.dateInput = this.endCompareDateId;
 		}
@@ -1086,7 +1089,7 @@ pickerDateRange.prototype.fillDate = function(year, month, index) {
         } else if(d.getTime() > lastDayOfMonth.getTime()) { // 当前月之后的日期
             tdClass = this.mOpts.theme + '_' + this.mOpts.disableGray;
             deviation = '1';
-        } else if((this.mOpts.stopToday == true && d.getTime() > today.getTime()) || d.getTime() < __method.mOpts.minValidDate * 1000) { // 当前时间之后的日期，或者开启统计之前的日期
+        } else if((this.mOpts.stopToday == true && d.getTime() > today.getTime()) || d.getTime() < __method.mOpts.minValidDate * 1000 || ('' !== __method.mOpts.maxValidDate && d.getTime() > __method.mOpts.maxValidDate * 1000)) { // 当前时间之后的日期，或者开启统计之前的日期
             tdClass = this.mOpts.theme + '_' + this.mOpts.disableGray;
             deviation = '2';
         } else { // 当前月日期
