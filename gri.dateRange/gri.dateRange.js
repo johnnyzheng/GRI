@@ -8,7 +8,8 @@
  *                    2013-01-31  增加自定义灰掉周末 周几的选项，增加自动初始化自动提交的功能
  *                    2013-03-15  支持一个页面多个日期选择器，快捷日期选择
  *                    2013-03-26  增加确认、取消按钮的隐藏，而直接自动提交
- * 					  2013-08-01  增加接口，支持自定义开始结束时间
+ * 					  2013-08-01  扩展接口，增加最近90天，增加自定义可选时间
+ * 					  2013-08-12 日期选择器框体宽度超出视窗大小的时候制动鼓靠右对齐
  *=======================================================================
 */
 	
@@ -32,8 +33,8 @@
         endDate : '', // 结束日期
         startCompareDate : '', // 对比开始日期
         endCompareDate : '', // 对比结束日期
-		minValidDate : '315507600', //最小可用时间，控制日期选择器的可选力度
-        maxValidDate : '', // 最大可用事件，与stopToday 配置互斥
+	minValidDate : '315507600', //最小可用时间，控制日期选择器的可选力度
+        maxValidDate : '', // 最大可用时间，与stopToday 配置互斥
         success : function(obj) {return true;}, //回调函数，选择日期之后执行何种操作
         startDateId : 'startDate', // 开始日期输入框ID
         startCompareDateId : 'startCompareDate', // 对比开始日期输入框ID
@@ -331,11 +332,11 @@
 	//判断是否是实时数据,如果是将时间默认填充进去 added by johnnyzheng 12-06
 	if(this.mOpts.singleCompare){
 		if(this.mOpts.theme === 'ta'){
-		$('#' + __method.startDateId).val(__method.mOpts.startDate);
-		$('#' + __method.endDateId).val(__method.mOpts.startDate);
-		$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
-		$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
-	}
+			$('#' + __method.startDateId).val(__method.mOpts.startDate);
+			$('#' + __method.endDateId).val(__method.mOpts.startDate);
+			$('#' + __method.startCompareDateId).val(__method.mOpts.startCompareDate);
+			$('#' + __method.endCompareDateId).val(__method.mOpts.startCompareDate);
+		}
 		else{
 			$('#' + __method.startDateId).val(__method.mOpts.startDate);
 			$('#' + __method.endDateId).val(__method.mOpts.startDate);
@@ -812,7 +813,7 @@ pickerDateRange.prototype.selectDate = function(ymd) {
         $('#' + this.dateInput).val(ymdFormat);
         // 切换输入框焦点
 		if (true == this.mOpts.singleCompare || true == this.mOpts.isSingleDay) {
-			this.dateInput = this.startCompareDateId;
+            this.dateInput = this.startCompareDateId;
 			$('#' + this.endCompareDateId).val(ymdFormat);
 			(this.mOpts.shortOpr || this.mOpts.autoSubmit) && this.close(1);
             this.mOpts.success({'startDate': $('#' + this.mOpts.startDateId).val(),
@@ -821,7 +822,7 @@ pickerDateRange.prototype.selectDate = function(ymd) {
                 'startCompareDate':$('#' + this.mOpts.startCompareDateId).val(),
                 'endCompareDate':$('#' + this.mOpts.endCompareDateId).val()
             });
-		}
+        }
 		else{
 		     this.dateInput = this.endCompareDateId;
 		}
@@ -876,8 +877,8 @@ pickerDateRange.prototype.show = function(isCompare, __method) {
 	$('#' + __method.dateRangeDiv).css('display', isCompare ? 'none' : '');
 	$('#' + __method.dateRangeCompareDiv).css('display', isCompare ? '' : 'none');
     var pos = isCompare ?  $('#' + this.inputCompareId).offset() : $('#' + this.inputId).offset();
-	var offsetHeight = isCompare ? $('#' + this.inputCompareId).attr('offsetHeight') : $('#' + this.inputId).attr('offsetHeight')
-    var clientWidth = parseInt($(document.body).attr('clientWidth'));
+	var offsetHeight = isCompare ? $('#' + this.inputCompareId).height() : $('#' + this.inputId).height();
+    var clientWidth = parseInt($(document.body)[0].clientWidth);
     var left = pos.left;
     $("#" + this.calendarId).css('display', 'block');
     if (true == this.mOpts.singleCompare || true == this.mOpts.isSingleDay) {
@@ -887,12 +888,13 @@ pickerDateRange.prototype.show = function(isCompare, __method) {
 		$('.' + this.mOpts.joinLineId).css('display', 'none');
     }
     // 如果和输入框左对齐时超出了宽度范围，则右对齐
-    if(0 < clientWidth && $("#" + this.calendarId).attr('offsetWidth') + pos.left > clientWidth) {
-        left = pos.left + $('#' + this.inputId).attr('offsetWidth') - $("#" + this.calendarId).attr('offsetWidth') + ((/msie/i.test(navigator.userAgent) && !(/opera/i.test(navigator.userAgent)))? 5 : 0) ;
-    }
+    if(0 < clientWidth && $("#" + this.calendarId).width() + pos.left > clientWidth) {
+        left = pos.left + $('#' + this.inputId).width() - $("#" + this.calendarId).width() + ((/msie/i.test(navigator.userAgent) && !(/opera/i.test(navigator.userAgent)))? 5 : 0) ;
+		__method.mOpts.theme=='ta' && (left += 50);
+	}
     $("#" + this.calendarId).css('left', left  + 'px');
-    $("#" + this.calendarId).css('top', pos.top + (offsetHeight ? offsetHeight- 1 : (__method.mOpts.theme=='ta'?35:22)) + 'px');
-
+    //$("#" + this.calendarId).css('top', pos.top + (offsetHeight ? offsetHeight- 1 : (__method.mOpts.theme=='ta'?35:22)) + 'px');
+	$("#" + this.calendarId).css('top', pos.top + (__method.mOpts.theme=='ta'?35:22) + 'px');
 	//第一次显示的时候，一定要初始化输入框
 	isCompare ? this.changeInput(this.startCompareDateId) : this.changeInput(this.startDateId);
     return false;
